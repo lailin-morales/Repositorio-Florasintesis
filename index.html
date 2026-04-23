@@ -232,10 +232,23 @@
 </header>
 
 <div class="statsbar">
-  <div class="stat"><strong id="stat-areas">12</strong><span>Áreas</span></div>
-  <div class="stat"><strong id="stat-tableros">0</strong><span>Tableros</span></div>
+
+  <div class="stat"
+       onmouseenter="showImgTooltip(event, 'https://i.imgur.com/C2R0O43.png')"
+       onmousemove="moveTooltip(event)"
+       onmouseleave="hideImgTooltip()">
+
+    <strong id="stat-areas">12</strong>
+    <span>Áreas</span>
+  </div>
+
+  <div class="stat">
+    <strong id="stat-tableros">0</strong>
+    <span>Tableros</span>
+  </div>
 
   <img src="https://i.imgur.com/eE8aA5E.png" class="logo-header">
+
 </div>
 
 <div class="main-wrapper">
