@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Directorio de Tableros · Florasíntesis</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F6F9;
+    --surface: #FFFFFF;
+    --ink: #0D1B2A;
+    --muted: #8A96A3;
+    --border: #E4E8EE;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: #0D1B2A;
+    padding: 44px 52px 36px;
+    position: relative; overflow: hidden;
+  }
+  header::before {
+    content: ''; position: absolute;
+    top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  header::after {
+    content: ''; position: absolute;
+    bottom: -60px; right: 120px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .header-inner { position: relative; z-index: 1; max-width: 1100px; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+  .header-left {}
+  .header-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 10px;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif; font-size: clamp(20px, 3vw, 36px);
+    font-weight: 400; color: #fff; line-height: 1.15; white-space: nowrap; max-width: none;
+  }
+  header p { margin-top: 10px; font-size: 13px; color: rgba(255,255,255,0.4); font-weight: 300; }
+  .header-search { margin-top: 24px; position: relative; max-width: 380px; }
+  .header-search input {
+    width: 100%; padding: 11px 16px 11px 38px;
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    background: rgba(255,255,255,0.07); color: #fff;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;
+    transition: all .2s;
+  }
+  .header-search input::placeholder { color: rgba(255,255,255,0.3); }
+  .header-search input:focus { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
+  .header-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: .35; pointer-events: none; }
+
+  /* STATS */
+  .statsbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 16px 52px; display: flex; gap: 40px; flex-wrap: wrap;
+  }
+  .stat { display: flex; flex-direction: column; }
+  .stat strong { font-size: 22px; font-weight: 600; color: var(--ink); line-height: 1; }
+  .stat span { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  /* MAIN */
+  main { padding: 32px 52px 72px; max-width: 1200px; margin: 0 auto; }
+
+  /* AREA BLOCK */
+  .area-block {
+    margin-bottom: 20px; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 20px rgba(0,0,0,0.05);
+    opacity: 0; transform: translateY(12px);
+    animation: fadeUp .4s ease forwards;
+  }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  .area-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 24px; cursor: pointer; user-select: none;
+  }
+  .area-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.6); flex-shrink: 0; }
+  .area-name { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; flex: 1; color: #fff; }
+  .area-count {
+    font-size: 11px; font-weight: 500; padding: 3px 10px;
+    border-radius: 20px; background: rgba(255,255,255,0.15); color: #fff;
+  }
+  .area-chev { transition: transform .25s; opacity: .7; flex-shrink: 0; }
+  .area-block.collapsed .area-chev { transform: rotate(-90deg); }
+
+  /* TABLE */
+  .table-wrap { 
+  background: var(--surface); 
+  overflow-x: auto;
+  max-height: 3000px; /* necesario para animación */
+  transition: max-height .4s ease; 
+  -webkit-overflow-scrolling: touch;
+  }
+
+  .area-block.collapsed .table-wrap { 
+  max-height: 0; 
+  overflow: hidden; /* 👈 importante para ocultar contenido */
+  }
+
+  table { width: 100%; min-width: 700px; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    padding: 9px 18px; text-align: left; font-size: 10px; font-weight: 600;
+    letter-spacing: .9px; text-transform: uppercase; color: var(--muted);
+    background: #F8FAFC; border-bottom: 1px solid var(--border);
+  }
+  thead th:first-child { width: 44px; text-align: center; }
+  thead th:nth-child(3) { width: 200px; }
+  thead th:last-child { width: 180px; }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #F8FAFC; }
+  tbody td { padding: 12px 18px; vertical-align: middle; }
+  tbody td:first-child { text-align: center; font-size: 11px; color: var(--muted); font-weight: 500; }
+
+  .td-info { display: flex; flex-direction: column; gap: 4px; }
+  .td-name { font-weight: 500; color: var(--ink); line-height: 1.3; font-size: 13px; }
+  .td-obj { font-size: 11px; color: var(--muted); line-height: 1.45; font-style: italic; }
+
+  /* RESPONSABLE */
+  .td-resp { display: flex; align-items: center; gap: 10px; }
+  .resp-photo {
+    width: 34px; height: 34px; border-radius: 50%; object-fit: cover;
+    flex-shrink: 0; border: 2px solid rgba(0,0,0,0.07);
+  }
+  .resp-initials {
+    width: 34px; height: 34px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; flex-shrink: 0;
+  }
+  .resp-name { font-size: 12px; color: var(--ink); font-weight: 400; line-height: 1.3; }
+  .resp-role { font-size: 10px; color: var(--muted); }
+
+  /* PILLS */
+  .td-links { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 7px;
+    font-size: 11px; font-weight: 500; text-decoration: none;
+    border: 1px solid transparent; transition: all .15s;
+    white-space: nowrap; cursor: pointer;
+  }
+  .pill:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+  .pill svg { flex-shrink: 0; }
+
+  /* NO RESULTS */
+  #no-results { display: none; text-align: center; padding: 72px 24px; color: var(--muted); font-size: 14px; }
+
+  /* FOOTER */
+  footer { text-align: center; padding: 28px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); }
+
+  @media (max-width: 700px) {
+    header, .statsbar, main { padding-left: 20px; padding-right: 20px; }
+    .td-links { flex-direction: column; }
+    thead th:nth-child(3), tbody td:nth-child(3) { display: none; }
+  }
+
+/* TOOLTIP IMAGEN */
+.tooltip-img {
+  position: fixed;
+  display: none;
+  z-index: 9999;
+  background: white;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+
+.tooltip-img img {
+  width: 500px;
+  max-width: 450px;
+  height: auto;
+  border-radius: 10px;
+  display: block;
+}
+
+.main-wrapper {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.statsbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 52px;
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.logo-header {
+  margin-left: auto;
+  height: 50px;
+  width: auto;
+  opacity: 0.9;
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="header-label">Florasíntesis · Inteligencia de Negocio</div>
+      <h1>Directorio de Tableros Corporativos</h1>
+      <p>Accede a todos los tableros y archivos de la organización desde un solo lugar</p>
+      <p>Podrás ver la información del tablero si tienes permisos del administrador</p>
+      <div class="header-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar tablero, área u objetivo…">
+      </div>
+      <p class="header-hint">
+      👆 Pasa el cursor sobre los números de la matriz para previsualizar cada tablero
+      </p>
+    </div>
+  </div>
+</header>
+
+<div class="statsbar">
+  <div class="stat"><strong id="stat-areas">12</strong><span>Áreas</span></div>
+  <div class="stat"><strong id="stat-tableros">0</strong><span>Tableros</span></div>
+
+  <img src="https://i.imgur.com/eE8aA5E.png" class="logo-header">
+</div>
+
+<div class="main-wrapper">
+  <main id="main"></main>
+
+</div>
+<div id="no-results">No se encontraron resultados para "<span id="search-term"></span>"</div>
+
+<footer>Florasíntesis · Directorio de Tableros Corporativos &nbsp;·&nbsp; Para actualizar enlaces o responsables contacta al equipo de BI</footer>
+
+<div id="imgTooltip" class="tooltip-img"></div>
+
+<script>
+const AREAS = [
+  {
+    name: "Comercial", color: "#1E3A5F", light: "#EBF2FB",
+    tableros: [
+      { name: "Sales Scorecard", obj: "Establecer alertas a partir de la información disponible y desarrollar un plan de acción", tabUrl: "https://app.powerbi.com/links/M9g3iUcit3?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://imgur.com/CX293gL.png" , resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Comercial Móvil", obj: "Monitorear el desempeño comercial de cada ejecutivo", tabUrl: "https://app.powerbi.com/links/4xyLNqYIEy?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare" , img: "https://imgur.com/Xtg5dTC.png"  ,resp: { nombre: "Ejecutivos", rol: "Área Comercial", foto: "https://i.imgur.com/KF4dFjF.png" } },
+      { name: "Monitoreo de Clientes", obj: "Analizar el comportamiento de compra de cada cliente para fortalecer la relación comercial", tabUrl: "https://app.powerbi.com/links/0byhuqe3cI?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQBEYJl7FTadS7Kju0Gp25-3AQDyzo0g3Z-CsyTQNlImyIg?e=WmaVw5", img: "https://i.imgur.com/RLHljz9.png", resp: { nombre: "Supervisores", rol: "Área Comercial", foto: "https://i.imgur.com/S3waot8.png" } },
+      { name: "Clientes Nuevos, Actuales y Pareto", obj: " Analizar la captación, evolución y concentración de clientes para evaluar el crecimiento comercial", tabUrl: "https://app.powerbi.com/links/TFinj6Oi6s?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/x5wzYIU.png", resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Radar de Retención Cliente Recurso", obj: "Detectar oportunamente clientes inactivos o perdidos para activar acciones de recuperación", tabUrl: "https://app.powerbi.com/links/m1Jz5a3xm4?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQAj3fnf0lgcSqaf3dhPiipTAS4vdgyUym09M8gr0r5KAFc?e=mavocd", img: "https://i.imgur.com/DDj5vSq.png",  resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Radar de Seguimiento Comercial", obj: "Seguimiento a la recuperación y reactivación de clientes", tabUrl: "https://app.powerbi.com/links/CcZie-ln7M?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img:"https://i.imgur.com/jbowGWB.png" , resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Mapa Estratégico de Productos", obj: "Identificar grupos de ítems con comportamientos comunes para optimizar estrategias de venta", tabUrl: "https://app.powerbi.com/links/A-TtkCJzxW?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/xqxPLHj.png", resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Falta por Vender Cliente Recurso", obj: "Identificar el monto pendiente por vender por cliente y recurso para focalizar oportunidades y cerrar brechas comerciales", tabUrl: "https://app.powerbi.com/links/PypDl2enNO?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare",img: "https://i.imgur.com/mWGVaSi.png",  resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Indicadores Comerciales", obj: "Consolidar la información de todos los tableros comerciales en uno solo que integre y represente todos los indicadores clave", tabUrl: "https://app.powerbi.com/links/hCjfyJKFub?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/1kjzVMD.png",  resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Clasificación de la Demanda por Riesgo", obj: "Identificar qué recursos requieren mayor atención según su nivel de riesgo y su impacto", tabUrl: "https://app.powerbi.com/links/G0avJ7SYXM?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/Mrn8Qk8.png",  resp: { nombre: "Adela Pacheco", rol: "Área Comex", foto: "https://i.imgur.com/361pEDX.png" } },
+      { name: "Stock Disponible por Recursos", obj: "Disponer de información oportuna sobre la disponibilidad y valoración del inventario", tabUrl: "https://app.powerbi.com/links/v48mWTPtU6?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/gsJStRx.png", resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Demanda Básica", obj: "Visualizar y monitorear la demanda básica para identificar tendencias", tabUrl: "https://app.powerbi.com/links/jyNX9p9n5p?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQCfEeDOJXgeTbNZu9ylKnkyARV7o6EuRTnIIguhuCkjvJM?e=MWAN8h", img: "https://i.imgur.com/0eYEMLN.png", resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Mundial Florasíntesis", obj: "Visibilizar el progreso individual y colectivo para promover el logro de objetivos comerciales y el crecimiento profesional", tabUrl: "https://app.powerbi.com/links/d3Uf17bzQx?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/wglQ7oL.png",  resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Codarom", obj: "Analizar la aplicación de cada producto por línea de negocio para optimizar decisiones estratégicas", tabUrl: "https://app.powerbi.com/links/aMJsKGiwRa?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/DVnaxzL.png",  resp: { nombre: "Coordinadores de Línea", rol: "Área Comercial", foto: "https://i.imgur.com/eB4Tl6l.png" } },
+      { name: "Pedidos", obj: "Monitorear la gestión de pedidos, facturación, y control diario de colaboradores", tabUrl: "https://app.powerbi.com/links/uSCT2e1pav?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQBsnlichMzbQLve_0Ejy-TwAYwBxqlc2S7ZRc9h_tSLtM8?e=Mqx9VD", img: "https://i.imgur.com/xsFYBiJ.png" ,  resp: { nombre: "Ariel Analuisa", rol: "Área Comercial", foto: "https://i.imgur.com/jBjXwsJ.png" } },
+      { name: "Recomendaciones de Compra", obj: "Identificar oportunidades de venta cruzada", tabUrl: " ", resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://imgur.com/9xMKgZr.png" } },
+      { name: "Proyectos de Sabores", obj: "Transparentar y gestionar proyectos en la división de sabores", tabUrl: "https://app.powerbi.com/links/VVPkTvLxWs?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQBxEdi6oF_BQ7ZHJTcoK-udAXhw0iZW6xDPew13W9mnNNA?e=ZLAQRz", img:"https://i.imgur.com/KrxWtUg.png" ,  resp: { nombre: "Caolina Condoy", rol: "Área Comercial Sabores", foto: "https://i.imgur.com/WM3lxvZ.png" } },
+      { name: "Proyección Cierre de Mes", obj: "Anticipar posibles riesgos en el cumplimiento del cierre", tabUrl: "https://app.powerbi.com/links/Xh6265p7xE?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQDysh8CdcY7TbfM3tRtockvAae_WO7W0RuQQxeIVDil5oY?e=rcOXke", img: "https://i.imgur.com/0Zug7ga.png",  resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Primera Venta de Fragancias", obj: "Evaluar la efectividad de las estrategias comerciales y de marketing aplicadas", tabUrl: "https://app.powerbi.com/links/WZK877vPXb?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: " ", img: "https://i.imgur.com/RccoUa7.png",  resp: { nombre: "Andrés Aizaga", rol: "Área Comercial Fragancias", foto: "https://i.imgur.com/YPpE0pd.png" } },
+      { name: "Gestión de Reclamos y Visitas Técnicas", obj: "Seguimiento a la gestión de reclamos y visitas técnicas", tabUrl: " ", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQA-WKeUyhAdTayImMvDftWgAXTI86Zl1l_XRO97RuSYWvk?e=v1Au4A",  resp: { nombre: "Edgar Ramírez", rol: "Aplicación Fragancias", foto: "https://i.imgur.com/XIasDPc.png" } },
+      { name: "Evaluación de Fragancias", obj: "Controlar los parámetros de formulación por fragancia", tabUrl: " ", resp: { nombre: "Edgar Ramírez", rol: "Aplicación Fragancias", foto: "https://i.imgur.com/XIasDPc.png" } },
+      { name: "Control de Pedidos vs Facturación", obj: "Supervisar la conversión de pedidos en facturación para garantizar la efectividad del proceso comercial", resp: { nombre: "Ariel Analuisa", rol: "Área Comercial", foto: "https://i.imgur.com/jBjXwsJ.png" } },
+      { name: "Asignación de Pedidos", obj: "Priorizar pedidos según su criticidad e impacto para optimizar la atención y el cumplimiento oportuno", tabUrl: "https://app.powerbi.com/links/uYYh1LWymI?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:f:/g/personal/cangueta_florasintesis_com_ec/IgAyN-F9hhCAR4k9tAoDoWnVARMMDk6ui6t1R0ZFnapj5GM?e=0xTrcj",img: "https://i.imgur.com/eQNINHW.png" ,  resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Gestión Comercial", obj: "Dar visibilidad diaria a la gestión comercial y operativa para reforzar el seguimiento diario y mejora continua", tabUrl: "https://app.powerbi.com/links/X9rldCzvzf?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:f:/g/personal/garteaga_florasintesis_com_ec/IgC0rG-smfAnTbxb_8yS1DtkAZLcOzpT5-RiJnjj9rKK69A?e=4YcP8B", img: "https://i.imgur.com/5lUzIur.png", resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Recursos con Stock Disponible y Baja Rotación", obj: "Identificar recursos de baja rotación con alto stock para reducir sobreinventarios y optimizar el capital invertido", tabUrl: "https://app.powerbi.com/links/wchQxO32Fl?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/olsfoGp.png" , resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+      { name: "Stock Perfumería Fina", obj: "Controlar la existencia de productos de perfumería fina para mejorar la planificación de reposiciones", tabUrl: "https://app.powerbi.com/links/ooid9xvS7O?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQAlqqvts4b_T4lDZOTjEjFXAS7Fe5egOzW9-BgVtrw4Fuc?e=rMckZ8", img: "https://i.imgur.com/elY5FqC.png", resp: { nombre: "Juan Fernando Burbano", rol: "Área Comercial Perfumería Fina", foto: "https://i.imgur.com/J3NXhtA.png" } },
+      { name: "Stock Aromas Deluxe - Konak", obj: "Control de inventario para el cliente", tabUrl: "https://app.powerbi.com/links/0mB2ZDdX8g?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/An0QVAV.png" ,  resp: { nombre: "Geovanny Arteaga", rol: "Área Comercial", foto: "https://i.imgur.com/2p84atZ.png" } },
+    ]
+  },
+  { name: "Financiero", color: "#1A5C38", light: "#E6F4ED", tableros: [
+      { name: "Financiero", obj: "Brindar una visión clara de la situación financiera para optimizar la planificación y el control económico", tabUrl: "https://app.powerbi.com/links/kK2LfmPx1S?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/AR1Q9jg.png", resp: { nombre: "Edison Guanocunga", rol: "Área Financiera", foto: "https://i.imgur.com/HoLVfH6.jpeg" } },
+      { name: "Costos", obj: "Optimizar la gestión financiera a través del análisis de costos", tabUrl: " ", img: "https://i.imgur.com/pj6103E.png",  resp:{ nombre: "Edison Guanocunga", rol: "Área Financiera", foto: "https://i.imgur.com/HoLVfH6.jpeg" } },
+  ]},
+  { name: "Calidad", color: "#6B2737", light: "#FAEAED", tableros: [
+      { name: "Control Estadístico por Producto", obj: "Evaluar el desempeño estadístico por producto para detectar patrones y oportunidades de mejora", tabUrl: "https://app.powerbi.com/links/UrCIPMj_gy?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/xRWnyx7.png", resp: { nombre: "Valeria Viteri", rol: "Área Calidad", foto: "https://i.imgur.com/ByKqhLe.png" } },
+  ]},
+  { name: "Cartera", color: "#5C3A1A", light: "#F4EDE6", tableros: [
+      { name: "Aprobación Evaluación Cartera", obj: "Examinar el promedio de pago de los clientes para gestionar la cartera crediticia", tabUrl: "https://app.powerbi.com/links/4lSFohEFXI?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img:"https://i.imgur.com/xQ4SRqX.png" ,  resp: { nombre: "Josefina López", rol: "Área Cartera", foto: "https://i.imgur.com/9MfEr7M.png" }},
+      { name: "Falta por Cobrar", obj: "Controlar las cuentas por cobrar para reducir la cartera vencida y fortalecer la liquidez de la organización", tabUrl: " ", img: "https://i.imgur.com/VdcINyP.png",  resp: { nombre: "Josefina López", rol: "Área Cartera", foto: "https://i.imgur.com/9MfEr7M.png" } },
+  ]},
+  { name: "Comex y Supply Chain", color: "#1A4A5C", light: "#E6F2F4", tableros: [
+      { name: "Control de Producción", obj: "Optimizar la planificación de productos terminados y monitorear las líneas de negocio", tabUrl: "https://app.powerbi.com/links/BmqNK_YQsm?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img:"https://i.imgur.com/2f5vHk9.png" ,  resp: { nombre: "Miguel Peñafiel", rol: "Área Supply Chain", foto: "https://i.imgur.com/0PvCo2j.png" }},
+      { name: "Evaluación de Proveedores", obj: "Visualizar y monitorear los resultados de las encuesta de proveedores de las diferentes lineas de negocio para identificar los proveedores aptos ", tabUrl: "https://app.powerbi.com/links/OPznVShiIY?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img:"https://i.imgur.com/4WUynXa.png" ,  resp: { nombre: "Adela Pacheco", rol: "Área Comex", foto: "https://i.imgur.com/361pEDX.png" }},
+  ]},
+  { name: "Operaciones", color: "#3A1A5C", light: "#EDE6F4", tableros: [
+      { name: "Caja Chica", obj: "Controlar la gestión de caja chica, asegurando el uso adecuado de los fondos", tabUrl: "https://app.powerbi.com/links/DUuSVfH3qc?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:f:/g/personal/cangueta_florasintesis_com_ec/IgAscjP7be5PTbFWgedl3em-AX8kSWCcDdoY36yi7-p9kc4?e=89KP9W", img: "https://i.imgur.com/YwmsnmD.png",  resp: { nombre: "Johana Nasevilla", rol: "Área Operaciones", foto: "https://i.imgur.com/4idhozt.png" } },
+      { name: "Control de Bodega", obj: "Identificar  posibles inconsistencias en el plan de producción", tabUrl: "https://app.powerbi.com/links/WWq3DcLWsy?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQA02DzTR6ppRKhNZa6SFFwcAV65CzZXTEtyDLGRypNxMUc?e=vlFvgj",img: "https://i.imgur.com/xiEpPPW.png",   resp: { nombre: "Johana Nasevilla", rol: "Área Operacines", foto: "https://i.imgur.com/4idhozt.png" } },
+      { name: "Logística", obj: "Automatizar el reporte de indicadores de tiempos de despacho y pedidos", tabUrl: "https://app.powerbi.com/links/B6pnmNYNG2?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQCOhm9GxuF_SoBg069PVRtsASKp_lMaW2qyOdPpU44wtbM?e=GBpIwU", img:"https://i.imgur.com/eXZF0gc.png" ,  resp: { nombre: "Johana Nasevilla", rol: "Área Operaciones", foto: "https://i.imgur.com/4idhozt.png" } },
+  ]},
+  { name: "Investigación y Desarrollo", color: "#5C1A3A", light: "#F4E6ED", tableros: [
+      { name: "Comisiones Fragancias y Perfumería Fina", obj: "Controlar el cálculo y pago de comisiones en fragancias y perfumería fina, garantizando precisión, transparencia", tabUrl: "https://app.powerbi.com/links/GgjWuxD66N?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/Jr95Ku8.png",  resp: { nombre: "Stalin Cabrera", rol: "Área I+D Fragancias-Perfumería", foto: "https://i.imgur.com/jPH3hJW.png" }},
+      { name: "Comisiones Rendimiento de Sabores", obj: "Supervisar el desempeño comercial mediante el control de comisiones, ventas, cumplimiento de presupuesto y gestión de vencimientos", tabUrl: "https://app.powerbi.com/links/LXeT97HQAb?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img:"https://i.imgur.com/5VlQ9RQ.png" ,  resp: { nombre: "Pablo Salvador", rol: "Área I+D Sabores", foto: "https://i.imgur.com/ZNNsI6Q.png" } },
+  ]},
+  { name: "Perú", color: "#1A5C5C", light: "#E6F4F4", tableros: [
+      { name: "Comercial Perú", obj: "Analizar el rendimiento de las ventas para la toma de decisiones y mejorar las acciones comerciales", tabUrl: "https://app.powerbi.com/links/GpeOjZ116m?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/T4iHwpJ.png",  resp: { nombre: "Antonia Álvarez", rol: "Área Comercial", foto: "https://i.imgur.com/Q5AJkTL.png" } },
+      { name: "Muestras Perú", obj: "Medir la efectividad de las muestras enviadas y su impacto en las ventas", tabUrl: "https://app.powerbi.com/links/gHKr_tNh7g?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/eo5ttWJ.png",  resp: { nombre: "Antonia Álvarez", rol: "Área Muestras", foto: "https://i.imgur.com/Q5AJkTL.png" } },
+      { name: "Supply Chain Perú", obj: "Optimizar la planificación de productos terminados y monitorear las líneas de negocio", tabUrl: "https://app.powerbi.com/links/COyIhu31Xr?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare",img: "https://i.imgur.com/ry8zvTe.png",   resp: { nombre: "Yoni Cruz", rol: "Área Supply Chain", foto: "https://i.imgur.com/S8W02yf.png" } },
+  ]},
+  { name: "Postventa", color: "#3A5C1A", light: "#EDF4E6", tableros: [
+      { name: "Encuesta de Satisfacción al Cliente", obj: "Visualizar y monitorear los resultados de la encuesta de satisfacción del cliente para identificar tendencias clave en la percepción, necesidades y expectativas de los clientes", tabUrl: "https://app.powerbi.com/links/6uZu6c2dR9?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/B9zB8Ws.png",  resp:{ nombre: "Fabricio García", rol: "Área Postventa", foto: "https://i.imgur.com/Tzk31Mu.png" }},
+      { name: "Quejas y Reclamos", obj: "Monitorear las quejas y reclamos para asegurar el cumplimiento de los estándares de calidad", tabUrl: "https://app.powerbi.com/links/X9VEWDER2f?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/LBT9OsK.png",  resp: { nombre: "Fabricio García", rol: "Área Postventa", foto: "https://i.imgur.com/Tzk31Mu.png" } },
+  ]},
+  { name: "Marketing", color: "#5C4A1A", light: "#F4F0E6", tableros: [
+      { name: "Colecciones, Eventos y Campañas", obj: "Analizar el efecto de colecciones, eventos y campañas en el comportamiento de compra", tabUrl: "https://app.powerbi.com/links/7UWDjkN_YQ?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", xlUrl: "https://marcsealcom-my.sharepoint.com/:x:/g/personal/cangueta_florasintesis_com_ec/IQDL5a9tsT29SIc21ZQ-tOXEAeoEkvGtzlyKpYGHHjvJKRw?e=cgSaXL", img:"https://i.imgur.com/7qKuvUB.png" ,  resp: { nombre: "Natalia Téllez", rol: "Área Marketing", foto: "https://i.imgur.com/TldYGt9.png" }},
+  ]},
+  { name: "Importaciones", color: "#1A3A5C", light: "#E6EDF4", tableros: [
+      { name: "Importaciones", obj: "Evaluar la participación frente a la competencia y detectar oportunidades de mejora", tabUrl: "https://app.powerbi.com/links/s0Ggc1ukWH?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/jk4Wvib.png",  resp: { nombre: "Stalin Cabrera", rol: "Área Comercial", foto: "https://i.imgur.com/jPH3hJW.png" } },
+  ]},
+  { name: "Muestras", color: "#4A1A5C", light: "#F0E6F4", tableros: [
+      { name: "Muestras", obj: "Medir la efectividad de las muestras enviadas y su impacto en las ventas", tabUrl: "https://app.powerbi.com/links/EWaVhTnc9O?ctid=17fe0554-a852-4a68-a8f9-8335eddc2ebe&pbi_source=linkShare", img: "https://i.imgur.com/MrrVEj6.png",  resp: { nombre: "Anthony Lasluisa", rol: "Área Muestras", foto: "https://i.imgur.com/6xNoDlJ.png" } },
+  ]},
+];
+
+// Stats
+const totalTableros = AREAS.reduce((s, a) => s + a.tableros.length, 0);
+document.getElementById('stat-areas').textContent = AREAS.length;
+document.getElementById('stat-tableros').textContent = totalTableros;
+
+function iconTab() {
+  return `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`;
+}
+function iconXl() {
+  return `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>`;
+}
+
+function buildAvatar(resp, color) {
+  if (resp.foto) {
+    const fallback = resp.iniciales || resp.nombre.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    return `<img class="resp-photo" src="${resp.foto}" alt="${resp.nombre}"
+      onerror="this.outerHTML='<div class=\\'resp-initials\\' style=\\'background:${color}22;color:${color}\\'>${fallback}</div>'" />`;
+  }
+  return `<div class="resp-initials" style="background:${color}22; color:${color};">${resp.iniciales}</div>`;
+}
+
+function renderAreas(filter = '') {
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  const q = filter.toLowerCase().trim();
+  let visibleCount = 0;
+
+  AREAS.forEach((area, ai) => {
+    const matched = area.tableros.filter(t =>
+      !q || t.name.toLowerCase().includes(q) || area.name.toLowerCase().includes(q) || t.obj.toLowerCase().includes(q)
+    );
+    if (!matched.length) return;
+    visibleCount += matched.length;
+
+    const block = document.createElement('div');
+    block.className = 'area-block';
+    block.style.animationDelay = `${ai * 0.04}s`;
+
+    const rows = matched.map((t) => {
+      const idx = area.tableros.indexOf(t) + 1;
+      const rowBg = (idx % 2 === 0) ? '#fff' : area.light;
+      const respCell = t.resp
+        ? `<div class="td-resp">${buildAvatar(t.resp, area.color)}<div><div class="resp-name">${t.resp.nombre}</div><div class="resp-role">${t.resp.rol}</div></div></div>`
+        : '<span style="color:#ccc;font-size:12px;">—</span>';
+      return `<tr style="background:${rowBg}">
+        <td 
+        onmouseenter="showImgTooltip(event, '${t.img || ''}')"
+        onmousemove="moveTooltip(event)"
+        onmouseleave="hideImgTooltip()"
+         >
+        ${idx}
+        </td>
+        <td>
+          <div class="td-info">
+            <div class="td-name">${t.name}</div>
+            <div class="td-obj">${t.obj}</div>
+          </div>
+        </td>
+        <td>${respCell}</td>
+        <td>
+          <div class="td-links">
+            <a href="${t.tabUrl}" class="pill" target="_blank"
+              style="background:${area.color}15; color:${area.color}; border-color:${area.color}30;">
+              ${iconTab()} Ver tablero
+            </a>
+            ${t.xlUrl && t.xlUrl.trim() !== "" && t.xlUrl.trim() !== " " ? `
+            <a href="${t.xlUrl}" class="pill" target="_blank"
+            style="background:#fff; color:${area.color}; border-color:${area.color}30;">
+            ${iconXl()} Excel
+            </a>
+           ` : ``}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    block.innerHTML = `
+      <div class="area-header" style="background:${area.color};" onclick="this.closest('.area-block').classList.toggle('collapsed')">
+        <span class="area-dot"></span>
+        <span class="area-name">${area.name}</span>
+        <span class="area-count">${matched.length} tablero${matched.length !== 1 ? 's' : ''}</span>
+        <svg class="area-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre del Tablero</th>
+              <th>Responsable</th>
+              <th>Accesos</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+
+    main.appendChild(block);
+  });
+
+  const noRes = document.getElementById('no-results');
+  if (visibleCount === 0) {
+    noRes.style.display = 'block';
+    document.getElementById('search-term').textContent = filter;
+  } else {
+    noRes.style.display = 'none';
+  }
+}
+
+function toggleArea(header) {
+  header.closest('.area-block').classList.toggle('collapsed');
+}
+
+let debounce;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(debounce);
+  debounce = setTimeout(() => renderAreas(e.target.value), 180);
+});
+
+renderAreas();
+
+const tooltip = document.getElementById("imgTooltip");
+
+function showImgTooltip(event, imgUrl) {
+  if (!imgUrl) return;
+
+  tooltip.innerHTML = `<img src="${imgUrl}" />`;
+  tooltip.style.display = "block";
+
+  moveTooltip(event);
+}
+
+function moveTooltip(event) {
+  tooltip.style.left = (event.clientX + 15) + "px";
+  tooltip.style.top = (event.clientY - 100 ) + "px";
+}
+
+function hideImgTooltip() {
+  tooltip.style.display = "none";
+}
+
+</script>
+</body>
+</html>
